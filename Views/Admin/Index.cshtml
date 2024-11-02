@@ -1,0 +1,246 @@
+﻿@model MvcCourseManagement.Controllers.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<h2>Admin Dashboard</h2>
+
+<div class="container">
+    <h4>Pending Users</h4>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.PendingUsers)
+            {
+                <tr>
+                    <td>@user.Name</td>
+                    <td>@user.Email</td>
+                    <td>@user.Role</td>
+                    <td>
+                        <button class="btn btn-success" onclick="acceptUser(@user.UserId)">Accept</button>
+                        <button class="btn btn-danger" onclick="rejectUser(@user.UserId)">Reject</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4>Approved Professors</h4>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var professor in Model.ApprovedProfessors)
+            {
+                <tr>
+                    <td>@professor.Name</td>
+                    <td>@professor.Email</td>
+                    <td>
+                        <button class="btn btn-warning" onclick="showSuspendModal(@professor.UserId)">Suspend</button>
+                        <button class="btn btn-danger" onclick="revokeProfessor(@professor.UserId)">Revoke</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4>Suspended Professors</h4>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var professor in Model.SuspendedProfessors)
+            {
+                <tr>
+                    <td>@professor.Name</td>
+                    <td>@professor.Email</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="revokeProfessor(@professor.UserId)">Revoke</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h4>Courses Pending Approval</h4>
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Professor</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var course in Model.CoursesPendingApproval)
+            {
+                <tr>
+                    <td>@course.Title</td>
+                    <td>@course.Description</td>
+                    <td>@Model.ApprovedProfessors.FirstOrDefault(p => p.UserId == course.ProfessorId)?.Name</td>
+                    <td>
+                        <button class="btn btn-success" onclick="acceptCourse(@course.CourseId)">Accept</button>
+                        <button class="btn btn-danger" onclick="rejectCourse(@course.CourseId)">Reject</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Existing Suspend Modal code... -->
+<!-- Suspend Modal -->
+<div id="suspendModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Suspend Professor</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="suspendUserId" />
+                <div class="form-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" class="form-control" id="startDate" />
+                </div>
+                <div class="form-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" class="form-control" id="endDate" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="suspendProfessor()">Suspend</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Existing JavaScript functions...
+    function acceptUser(userId) {
+        fetch('/Admin/AcceptUser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('User accepted');
+                location.reload();
+            } else {
+                alert('Error accepting user');
+            }
+        });
+    }
+
+    function rejectUser(userId) {
+        fetch('/Admin/RejectUser', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('User rejected');
+                location.reload();
+            } else {
+                alert('Error rejecting user');
+            }
+        });
+    }
+
+    function showSuspendModal(userId) {
+        document.getElementById("suspendUserId").value = userId;
+        $('#suspendModal').modal('show'); // Use Bootstrap modal to show
+    }
+
+    function suspendProfessor() {
+        const userId = document.getElementById("suspendUserId").value;
+        const startDate = document.getElementById("startDate").value;
+        const endDate = document.getElementById("endDate").value;
+
+        fetch('/Admin/SuspendProfessor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, startDate, endDate })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Professor suspended');
+                location.reload();
+            } else {
+                alert('Error suspending professor');
+            }
+        });
+    }
+
+    function revokeProfessor(userId) {
+        fetch('/Admin/RevokeProfessor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Professor revoked');
+                location.reload();
+            } else {
+                alert('Error revoking professor');
+            }
+        });
+    }
+
+    function acceptCourse(courseId) {
+        fetch('/Admin/AcceptCourse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ courseId })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Course accepted');
+                location.reload();
+            } else {
+                alert('Error accepting course');
+            }
+        });
+    }
+
+    function rejectCourse(courseId) {
+        fetch('/Admin/RejectCourse', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ courseId })
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Course rejected');
+                location.reload();
+            } else {
+                alert('Error rejecting course');
+            }
+        });
+    }
+</script>

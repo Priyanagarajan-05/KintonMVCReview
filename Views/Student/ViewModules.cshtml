@@ -1,0 +1,35 @@
+﻿@model Course
+
+@{
+    ViewData["Title"] = "Course Modules";
+}
+
+<h2>@Model.Title - Modules</h2>
+
+@if (Model.Modules.Count == 0)
+{
+    <p>No modules available for this course.</p>
+}
+else
+{
+    var currentModuleIndex = ViewData["CurrentModuleIndex"] != null ? (int)ViewData["CurrentModuleIndex"] : 0;
+    var currentModule = Model.Modules.ElementAt(currentModuleIndex);
+
+    <h3>Module @currentModuleIndex + 1: @currentModule.Title</h3>
+    <p>@currentModule.Content</p>
+
+    <div>
+        @if (currentModuleIndex < Model.Modules.Count - 1)
+        {
+            <form asp-action="ViewModules" method="get">
+                <input type="hidden" name="courseId" value="@Model.CourseId" />
+                <input type="hidden" name="currentIndex" value="@currentModuleIndex + 1" />
+                <button type="submit">Next</button>
+            </form>
+        }
+        else
+        {
+            <p>You have reached the last module.</p>
+        }
+    </div>
+}

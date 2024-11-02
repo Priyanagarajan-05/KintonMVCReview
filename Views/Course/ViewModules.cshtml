@@ -1,0 +1,59 @@
+﻿@model List<MvcCourseManagement.Models.Module>
+
+@{
+    ViewData["Title"] = "Course Modules";
+    var moduleIndex = 0;
+}
+
+<h2>Course Modules</h2>
+
+@if (Model != null && Model.Count > 0)
+{
+    foreach (var module in Model)
+    {
+        <div id="module-@module.ModuleId" class="module" style="display: @(moduleIndex == 0 ? "block" : "none")">
+            <h3>@module.Title</h3>
+            <p>@module.Content</p>
+            <button onclick="nextModule(@module.ModuleId)">Next</button>
+        </div>
+        moduleIndex++;
+    }
+    <button id="finishCourseButton" style="display:none;">Finish Course</button>
+}
+else
+{
+    <p>No modules available for this course.</p>
+}
+
+// JavaScript to handle module navigation
+<script>
+    let currentModuleIndex = 0;
+    const modules = @Html.Raw(Json.Serialize(Model));
+
+    function nextModule(currentModuleId) {
+        // Hide current module
+        document.getElementById("module-" + currentModuleId).style.display = "none";
+        currentModuleIndex++;
+
+        // Check if there are more modules to show
+        if (currentModuleIndex < modules.length) {
+            // Show the next module
+            document.getElementById("module-" + modules[currentModuleIndex].ModuleId).style.display = "block";
+        } else {
+            // All modules completed; show finish button
+            document.getElementById("finishCourseButton").style.display = "block";
+        }
+    }
+
+    document.getElementById("finishCourseButton").onclick = function () {
+        // Display review box for rating
+        const rating = prompt("Please enter your rating out of 5:");
+        if (rating) {
+            // Logic to update enrollment and mark as completed
+            // Call your controller method to save rating
+            // Redirect to dashboard or show success message
+            // Example: send the rating to the server (you'll need to implement this)
+            // fetch('/YourController/YourAction', { method: 'POST', body: JSON.stringify({ rating: rating }) });
+        }
+    }
+</script>
